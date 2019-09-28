@@ -1,15 +1,21 @@
 #include <stdio.h>
 
-void main() {
-  int fahr, cel;
-  int lower, upper, step;
+int main() {
+  float fahr, cel;
+  float lower, upper, step;
   lower = 0;
   upper = 300;
   step = 20;
   fahr = lower;
+  printf("+---------------|--------+\n");
+  printf("| Fahrenheit\t| Celsius|\n");
   while (fahr <= upper) {
     cel = 5 * (fahr-32) / 9;
-    printf("%d\t%d\n", fahr, cel);
+    printf("+---------------|--------+\n");
+    printf("| %3.1f\t\t| %6.1f |\n", fahr, cel);
     fahr += step;
   }
+  printf("+---------------|--------+\n");
+
+  return 0;
 }
