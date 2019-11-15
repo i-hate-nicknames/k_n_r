@@ -2,7 +2,7 @@
 #define TAB_SIZE 8
 
 int main() {
-  char ch;
+  int ch;
   int spaces_num = 0;
   int current_column = 0;
   while ((ch = getchar()) != EOF) {

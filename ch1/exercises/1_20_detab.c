@@ -5,7 +5,7 @@ int spaces_to_stop(int current_column, int tab_size);
 
 int main() {
   int current_column = 0;
-  char c;
+  int c;
   while ((c = getchar()) != EOF) {
     if (c == '\t') {
       int spaces = spaces_to_stop(current_column, TAB_SIZE);

@@ -6,7 +6,7 @@ void print_buf(char buf[], int len);
 void rearrange_buf(char buf[], int pos, int len);
 
 int main() {
-  char ch;
+  int ch;
   int current_col = 0;
   int last_space_idx = 0;
   char current_line[LINE_MAX];

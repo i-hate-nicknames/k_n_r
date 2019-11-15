@@ -14,7 +14,7 @@
  */
 int main() {
   int state = STATE_TEXT;
-  char ch;
+  int ch;
   while ((ch = getchar()) != EOF) {
     switch (state) {
     case STATE_TEXT:

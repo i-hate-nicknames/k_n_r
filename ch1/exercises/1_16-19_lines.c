@@ -45,7 +45,7 @@ void print_longest_line() {
 // stop copying if the number of characters exceeds limit
 // return TOTAL number of characters in this line (which can be bigger than limit)
 int getln(char copy_to[], int limit) {
-  char ch;
+  int ch;
   int len;
   int copied_len = 0;
   for (len = 0; (ch = getchar()) != EOF && ch != '\n'; ++len) {
