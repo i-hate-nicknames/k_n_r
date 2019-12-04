@@ -3,10 +3,12 @@
 
 #define MAXOP 100
 #define NUMBER '0'
+#define STRING 'a'
 
 int getop(char buf[]);
 void push (double);
 double pop(void);
+double handle_command(char command[]);
 
 int main(void) {
   int type;
@@ -16,6 +18,9 @@ int main(void) {
     switch (type) {
     case NUMBER:
       push(atof(op_read_buf));
+      break;
+    case STRING:
+      push(handle_command(op_read_buf));
       break;
     case '+':
       push(pop() + pop());
@@ -56,6 +61,11 @@ int main(void) {
   return 0;
 }
 
+double handle_command(char command[]) {
+
+  return 17.3;
+}
+
 #define STACK_SIZE 100
 
 int sp = 0;
@@ -85,28 +95,38 @@ int getch(void);
 void ungetch(int c);
 
 int getop(char buf[]) {
-  int i, c;
+  int i, c, type;
   // get next character or numeric operand
   // return the char or NUMBER in case of number
   // buf should contain string repr of the number
   while ((buf[0] = c = getch()) == '\t' || c == ' ') { }
   buf[1] = '\0';
-  if (!isdigit(c) && c != '.' && c != '-') {
+  if (!isdigit(c) && c != '.' && c != '-' && !islower(c)) {
     return c;
   }
   i = 1;
-  if (isdigit(c)) {
-    while(isdigit(buf[i++] = c = getch()));
+  // all commands start with lowercase letter
+  if (islower(c)) {
+    while (islower(buf[i++] = c = getch()));
+    type = STRING;
   }
-  if (c == '.' || c == '-') {
+  if (isdigit(c) || c == '.') {
     while(isdigit(buf[i++] = c = getch()));
+    if (c == '.' || c == '-') {
+      while(isdigit(buf[i++] = c = getch()));
+    }
+    type = NUMBER;
   }
-  // last character is not a digit so overwrite it
+  // last character is not a part of the digit/command
   buf[i-1] = '\0';
   if (c != EOF) {
     ungetch(c);
   }
-  return NUMBER;
+  return type;
+}
+
+int get_command(char buf[]) {
+  return 0;
 }
 
 #define BUF_SIZE 100
