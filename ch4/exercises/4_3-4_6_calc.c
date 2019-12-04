@@ -8,7 +8,7 @@
 int getop(char buf[]);
 void push (double);
 double pop(void);
-double handle_command(char command[]);
+void handle_command(char command[]);
 
 int main(void) {
   int type;
@@ -20,7 +20,7 @@ int main(void) {
       push(atof(op_read_buf));
       break;
     case STRING:
-      push(handle_command(op_read_buf));
+      handle_command(op_read_buf);
       break;
     case '+':
       push(pop() + pop());
@@ -61,9 +61,50 @@ int main(void) {
   return 0;
 }
 
-double handle_command(char command[]) {
+double vars[26];
 
-  return 17.3;
+void store_var(char var, double val) {
+  vars[(int) var] = val;
+}
+
+double lookup_var(char var) {
+  return vars[(int) var];
+}
+
+#include <string.h>
+#include <math.h>
+
+void handle_command(char command[]) {
+  double op2;
+  
+  if (strstr(command, "sin") != NULL) {
+    push(sin(pop()));
+    return;
+  }
+  if (strstr(command, "exp") != NULL) {
+    push(exp(pop()));
+    return;
+  }
+  if (strstr(command, "pow") != NULL) {
+    op2 = pop();
+    push(pow(pop(), op2));
+    return;
+  }
+  if (strstr(command, "print") != NULL) {
+    printf("printing stack :D \n");
+  }
+  if (strstr(command, "dup") != NULL) {
+    printf("duplicating top stack el :D \n");
+  }
+  if (strstr(command, "swap") != NULL) {
+    printf("swapping top two elements :D \n");
+  }
+  if (strstr(command, "clear") != NULL) {
+    printf("clearing the stack :D \n");
+  }
+  if (strlen(command) == 1) {
+    printf("handling variable :DD\n");
+  }
 }
 
 #define STACK_SIZE 100
