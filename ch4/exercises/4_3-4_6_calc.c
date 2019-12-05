@@ -8,6 +8,11 @@
 int getop(char buf[]);
 void push (double);
 double pop(void);
+void clear_stack(void);
+void print_top(void);
+void dup(void);
+void clear(void);
+void swap(void);
 void handle_command(char command[]);
 
 int main(void) {
@@ -51,7 +56,7 @@ int main(void) {
       }
       break;
     case '\n':
-      printf("Result: %f\n", pop());
+      /* printf("Result: %f\n", pop()); */
       break;
     default:
       printf("Error: unknown command: %s\n", op_read_buf);
@@ -60,6 +65,8 @@ int main(void) {
   }
   return 0;
 }
+
+// HANDLING VARIABLES AND COMMANDS
 
 double vars[26];
 
@@ -91,21 +98,23 @@ void handle_command(char command[]) {
     return;
   }
   if (strstr(command, "print") != NULL) {
-    printf("printing stack :D \n");
+    print_top();
   }
   if (strstr(command, "dup") != NULL) {
-    printf("duplicating top stack el :D \n");
+    dup();
   }
   if (strstr(command, "swap") != NULL) {
-    printf("swapping top two elements :D \n");
+    swap();
   }
   if (strstr(command, "clear") != NULL) {
-    printf("clearing the stack :D \n");
+    clear();
   }
   if (strlen(command) == 1) {
     printf("handling variable :DD\n");
   }
 }
+
+// STACK
 
 #define STACK_SIZE 100
 
@@ -129,6 +138,44 @@ double pop() {
     return 0.0;
   }
 }
+
+void clear() {
+  sp = 0;
+  printf("Stack cleared\n");
+}
+
+void dup() {
+  if (sp > 0) {
+    stack[sp] = stack[sp-1];
+    sp++;
+    printf("Top element on the stack has been duplicated\n");
+  } else {
+    printf("Error: the stack is empty, cannot duplicate\n");
+  }
+}
+
+void print_top() {
+  if (sp == 0) {
+    printf("The stack is empty\n");
+  } else {
+    printf("Current stack state:\n");
+    for (int i = 0, t = sp-1; i < 3 && t >= 0; ++i, --t) {
+      printf("%d: %f\n", t, stack[t]);
+    }
+  }
+}
+
+void swap() {
+  if (sp < 2) {
+    printf("Error: not enough elemets to swap\n");
+  } else {
+    double tmp = stack[sp-1];
+    stack[sp-1] = stack[sp-2];
+    stack[sp-2] = tmp;
+  }
+}
+
+// PARSING OP
 
 #include <ctype.h>
 
