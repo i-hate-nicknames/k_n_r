@@ -241,3 +241,10 @@ void ungetch(int c) {
   bufp[getch_top] = c;
   getch_top++;
 }
+
+// for 4_10
+// Read until newline, return resulting string
+// use this string for command parsing, the state
+// now is represented as a position in the string
+// instead of ungetch just decrement the position
+// too lazy to implement it and copy around all other code
