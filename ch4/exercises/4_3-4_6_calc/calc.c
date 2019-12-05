@@ -1,18 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+#include <math.h>
+
+#include "stack.h"
+#include "getch.h"
 
 #define MAXOP 100
 #define NUMBER '0'
 #define STRING 'a'
 
 int getop(char buf[]);
-void push (double);
-double pop(void);
-void clear_stack(void);
-void print_top(void);
-void dup(void);
-void clear(void);
-void swap(void);
 void handle_command(char command[]);
 
 int main(void) {
@@ -78,9 +77,6 @@ double lookup_var(char var) {
   return vars[(int) var];
 }
 
-#include <string.h>
-#include <math.h>
-
 void handle_command(char command[]) {
   double op2;
   
@@ -113,77 +109,6 @@ void handle_command(char command[]) {
     push(lookup_var(command[0]));
   }
 }
-
-// STACK
-
-#define STACK_SIZE 100
-
-int sp = 0;
-double stack[STACK_SIZE];
-
-void push(double x) {
-  if (sp < STACK_SIZE) {
-    stack[sp] = x;
-    sp++;
-  } else {
-    printf("Error: stack is full, cannot push %g\n", x);
-  }
-}
-
-double pop() {
-  if (sp > 0) {
-    return stack[--sp];
-  } else {
-    printf("Error: popping from the empty stack\n");
-    return 0.0;
-  }
-}
-
-void clear() {
-  sp = 0;
-  printf("Stack cleared\n");
-}
-
-void dup() {
-  if (sp > 0) {
-    stack[sp] = stack[sp-1];
-    sp++;
-    printf("Top element on the stack has been duplicated\n");
-  } else {
-    printf("Error: the stack is empty, cannot duplicate\n");
-  }
-}
-
-void print_top() {
-  if (sp == 0) {
-    printf("The stack is empty\n");
-  } else {
-    printf("Current stack state:\n");
-    for (int i = 0, t = sp-1; i < 3 && t >= 0; ++i, --t) {
-      if (i == 0) {
-        store_var('p', stack[t]);
-      }
-      printf("%d: %f\n", t, stack[t]);
-    }
-  }
-}
-
-void swap() {
-  if (sp < 2) {
-    printf("Error: not enough elemets to swap\n");
-  } else {
-    double tmp = stack[sp-1];
-    stack[sp-1] = stack[sp-2];
-    stack[sp-2] = tmp;
-  }
-}
-
-// PARSING OP
-
-#include <ctype.h>
-
-int getch(void);
-void ungetch(int c);
 
 int getop(char buf[]) {
   int i, c, type;
@@ -220,27 +145,6 @@ int get_command(char buf[]) {
   return 0;
 }
 
-#define BUF_SIZE 100
-
-int getch_top = 0;
-char bufp[BUF_SIZE];
-
-int getch() {
-  if (getch_top == 0) {
-    return getchar();
-  } else {
-    getch_top--;
-    return bufp[getch_top];
-  }
-}
-
-void ungetch(int c) {
-  if (getch_top >= BUF_SIZE) {
-    printf("Error: no size for ungetch\n");
-  }
-  bufp[getch_top] = c;
-  getch_top++;
-}
 
 // for 4_10
 // Read until newline, return resulting string
