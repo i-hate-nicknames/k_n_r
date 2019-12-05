@@ -56,7 +56,7 @@ int main(void) {
       }
       break;
     case '\n':
-      /* printf("Result: %f\n", pop()); */
+      /* printf("Result: %f\n", peek()); */
       break;
     default:
       printf("Error: unknown command: %s\n", op_read_buf);
@@ -110,7 +110,7 @@ void handle_command(char command[]) {
     clear();
   }
   if (strlen(command) == 1) {
-    printf("handling variable :DD\n");
+    push(lookup_var(command[0]));
   }
 }
 
@@ -160,6 +160,9 @@ void print_top() {
   } else {
     printf("Current stack state:\n");
     for (int i = 0, t = sp-1; i < 3 && t >= 0; ++i, --t) {
+      if (i == 0) {
+        store_var('p', stack[t]);
+      }
       printf("%d: %f\n", t, stack[t]);
     }
   }
