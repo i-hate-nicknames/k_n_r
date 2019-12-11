@@ -23,7 +23,15 @@ int getint(int* pn) {
   }
   sign = (c == '-') ? -1 : 1;
   if (c == '+' || c == '-') {
+    char sign = c;
     c = getch();
+    if (!isdigit(c)) {
+      // 5_1
+      // handle a sign char that doesn't have a number after it
+      ungetch(c);
+      ungetch(sign);
+      return 0;
+    }
   }
   for (*pn = 0; isdigit(c); c = getch()) {
     *pn = 10 * *pn + (c - '0');
@@ -35,19 +43,18 @@ int getint(int* pn) {
   return c;
 }
 
-int last_char;
-int buffered = 0;
+#define BUF_SIZE 100
+int buf[BUF_SIZE];
+int bufp = 0;
 
 int getch() {
-  if (buffered) {
-    buffered = 0;
-    return last_char;
+  if (bufp > 0) {
+    return buf[--bufp];
   } else {
     return getchar();
   }
 }
 
 void ungetch(int c) {
-  last_char = c;
-  buffered = 1;
+  buf[bufp++] = c;
 }
