@@ -9,7 +9,7 @@ char *lineptr[MAXLINES];
 int readlines(char *lineptr[], int maxlines);
 void writelines (char *lineptr[], int nlines);
 
-void quicksort(void *items[], int left, int right, int (*comp)(void *, void *));
+void quicksort(void *v[], int left, int right, int (*comp)(void *, void *), int reverse);
 void swap(void *items[], int s, int t);
 
 int numcmp(char *, char *);
@@ -18,13 +18,19 @@ int main(int argc, char **argv) {
 
   int nlines;
   int numeric = 0;
+  int reverse = 0;
 
-  if (argc > 1 && strcmp(argv[1], "-n") == 0) {
-    numeric = 1;
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-n") == 0) {
+      numeric = 1;
+    }
+    if (strcmp(argv[i], "-r") == 0) {
+      reverse = 1;
+    }
   }
   if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
     quicksort((void**) lineptr, 0, nlines-1,
-          (int (*) (void*, void*)) (numeric ? numcmp : strcmp));
+              (int (*) (void*, void*)) (numeric ? numcmp : strcmp), reverse);
     writelines(lineptr, nlines);
     return 0;
   } else {
@@ -33,22 +39,27 @@ int main(int argc, char **argv) {
   }
 }
 
-void quicksort(void *v[], int left, int right, int (*comp)(void *, void *)) {
+void quicksort(void *v[], int left, int right, int (*comp)(void *, void *), int reverse) {
   int last;
-
+  int cmp;
   if (left >= right) {
     return;
   }
   swap(v, left, (left + right)/2);
   last = left;
   for (int i = left+1; i <= right; i++) {
-    if ((*comp)(v[i], v[left]) < 0) {
+    if (reverse) {
+      cmp = (*comp)(v[left], v[i]);
+    } else {
+      cmp = (*comp)(v[i], v[left]);
+    }
+    if (cmp < 0) {
       swap(v, ++last, i);
     }
   }
   swap(v, left, last);
-  quicksort(v, left, last-1, comp);
-  quicksort(v, last+1, right, comp);
+  quicksort(v, left, last-1, comp, reverse);
+  quicksort(v, last+1, right, comp, reverse);
 }
 
 void swap(void *items[], int s, int t) {
