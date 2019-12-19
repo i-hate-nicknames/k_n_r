@@ -9,8 +9,11 @@ char *lineptr[MAXLINES];
 int readlines(char *lineptr[], int maxlines);
 void writelines (char *lineptr[], int nlines);
 
-void quicksort(void *v[], int left, int right, int (*comp)(void *, void *), int reverse);
+typedef int (*comparator)(void *, void*);
+
+void quicksort(void *v[], int left, int right, comparator cmp, int reverse);
 void swap(void *items[], int s, int t);
+comparator get_comparator(int numeric, int cased, int dir);
 
 int numcmp(char *, char *);
 
@@ -19,11 +22,11 @@ int main(int argc, char **argv) {
   int nlines;
   int numeric = 0;
   int reverse = 0;
-  int case_insensitive = 0;
+  int casei = 0;
 
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-n") == 0) {
-      if (case_insensitive) {
+      if (casei) {
         printf("Can't combine options -n and -f\n");
         return 1;
       }
@@ -37,13 +40,11 @@ int main(int argc, char **argv) {
         printf("Can't combine options -n and -f\n");
         return 1;
       }
-      case_insensitive = 1;
+      casei = 1;
     }
   }
   if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
-    quicksort((void**) lineptr, 0, nlines-1,
-              (int (*) (void*, void*))
-              (numeric ? numcmp : (case_insensitive ? strcasecmp : strcmp)), reverse);
+    quicksort((void**) lineptr, 0, nlines-1, get_comparator(numeric, !casei, 0), reverse);
     writelines(lineptr, nlines);
     return 0;
   } else {
@@ -52,9 +53,9 @@ int main(int argc, char **argv) {
   }
 }
 
-void quicksort(void *v[], int left, int right, int (*comp)(void *, void *), int reverse) {
+void quicksort(void *v[], int left, int right, comparator cmp, int reverse) {
   int last;
-  int cmp;
+  int cmp_result;
   if (left >= right) {
     return;
   }
@@ -62,17 +63,17 @@ void quicksort(void *v[], int left, int right, int (*comp)(void *, void *), int 
   last = left;
   for (int i = left+1; i <= right; i++) {
     if (reverse) {
-      cmp = (*comp)(v[left], v[i]);
+      cmp_result = (*cmp)(v[left], v[i]);
     } else {
-      cmp = (*comp)(v[i], v[left]);
+      cmp_result = (*cmp)(v[i], v[left]);
     }
-    if (cmp < 0) {
+    if (cmp_result < 0) {
       swap(v, ++last, i);
     }
   }
   swap(v, left, last);
-  quicksort(v, left, last-1, comp, reverse);
-  quicksort(v, last+1, right, comp, reverse);
+  quicksort(v, left, last-1, cmp, reverse);
+  quicksort(v, last+1, right, cmp, reverse);
 }
 
 void swap(void *items[], int s, int t) {
@@ -117,5 +118,15 @@ void writelines (char *lineptr[], int nlines) {
   for (int i = 0; i < nlines; i++) {
     printf(lineptr[i]);
     free(lineptr[i]);
+  }
+}
+
+comparator get_comparator(int numeric, int cased, int dir) {
+  if (numeric) {
+    return (comparator) numcmp;
+  } else if (!cased) {
+    return (comparator) strcasecmp;
+  } else {
+    return (comparator) strcmp;
   }
 }
