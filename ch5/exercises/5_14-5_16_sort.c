@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #define MAXLINES 5000
 
@@ -14,6 +15,8 @@ typedef int (*comparator)(void *, void*);
 void quicksort(void *v[], int left, int right, comparator cmp, int reverse);
 void swap(void *items[], int s, int t);
 comparator get_comparator(int numeric, int cased, int dir);
+// this is equivalent to this
+//int (*get_comparator(int numeric, int cased, int dir))(void *, void *);
 
 int numcmp(char *, char *);
 
@@ -23,11 +26,16 @@ int main(int argc, char **argv) {
   int numeric = 0;
   int reverse = 0;
   int casei = 0;
+  int dir = 0;
 
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-n") == 0) {
       if (casei) {
         printf("Can't combine options -n and -f\n");
+        return 1;
+      }
+      if (dir) {
+        printf("Can't combine options -n and -d\n");
         return 1;
       }
       numeric = 1;
@@ -42,9 +50,16 @@ int main(int argc, char **argv) {
       }
       casei = 1;
     }
+    if (strcmp(argv[i], "-d") == 0) {
+      if (numeric) {
+        printf("Can't combine options -n and -d\n");
+        return 1;
+      }
+      dir = 1;
+    }
   }
   if ((nlines = readlines(lineptr, MAXLINES)) >= 0) {
-    quicksort((void**) lineptr, 0, nlines-1, get_comparator(numeric, !casei, 0), reverse);
+    quicksort((void**) lineptr, 0, nlines-1, get_comparator(numeric, !casei, dir), reverse);
     writelines(lineptr, nlines);
     return 0;
   } else {
@@ -121,9 +136,54 @@ void writelines (char *lineptr[], int nlines) {
   }
 }
 
+int cmpdir_case(char *a, char *b) {
+  char acmp = 0, bcmp = 0;
+  for (int i = 0, j = 0; a[i] != '\0' && b[j] != '\0'; ) {
+    if (!islower(a[i]) || !isdigit(a[i]) || !isupper(a[i])) {
+      i++;
+      continue;
+    }
+    if (!islower(b[j]) || !isdigit(b[j]) || !isupper(b[j])) {
+      j++;
+      continue;
+    }
+    acmp = a[i];
+    bcmp = b[j];
+    if (acmp != bcmp) {
+      return acmp - bcmp;
+    }
+  }
+  return acmp-bcmp;
+}
+
+int cmpdir_caseless(char *a, char *b) {
+
+  char acmp = 0, bcmp = 0;
+  for (int i = 0, j = 0; a[i] != '\0' && b[j] != '\0'; ) {
+    if (!islower(a[i]) || !isdigit(a[i]) || !isupper(a[i])) {
+      i++;
+      continue;
+    }
+    if (!islower(b[j]) || !isdigit(b[j]) || !isupper(b[j])) {
+      j++;
+      continue;
+    }
+    acmp = a[i];
+    bcmp = b[j];
+    if (acmp != bcmp) {
+      return acmp - bcmp;
+    }
+  }
+  return acmp-bcmp;
+}
+
 comparator get_comparator(int numeric, int cased, int dir) {
   if (numeric) {
     return (comparator) numcmp;
+  } else if (dir && cased) {
+    return (comparator) cmpdir_case;
+  } else if (dir && !cased) {
+    return (comparator) cmpdir_caseless;
   } else if (!cased) {
     return (comparator) strcasecmp;
   } else {
