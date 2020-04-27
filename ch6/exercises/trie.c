@@ -2,6 +2,26 @@
 #include <stdlib.h>
 #include "trie.h"
 
+struct trie *make_trie(char c) {
+  struct trie *new;
+  new = (struct trie *) malloc(sizeof(struct trie));
+  new->c = c;
+  new->hi_kid = NULL;
+  new->lo_kid = NULL;
+  new->eq_kid = NULL;
+  new->occurrences = 0;
+}
+
+void delete_trie(struct trie *t) {
+  if (t == NULL) {
+    return;
+  }
+  delete_trie(t->lo_kid);
+  delete_trie(t->eq_kid);
+  delete_trie(t->hi_kid);
+  free(t);
+}
+
 struct trie *insert(struct trie *t, char *word) {
   int len = strlen(word);
   return insert_inner(t, word, len);
@@ -10,12 +30,7 @@ struct trie *insert(struct trie *t, char *word) {
 struct trie *insert_inner(struct trie *t, char *word, int len) {
   char current = word[0];
   if (t == NULL) {
-    t = (struct trie *) malloc(sizeof(struct trie));
-    t->c = current;
-    t->hi_kid = NULL;
-    t->lo_kid = NULL;
-    t->eq_kid = NULL;
-    t->occurrences = 0;
+    t = make_trie(current);
   }
   if (len == 1) {
     t->occurrences++;
