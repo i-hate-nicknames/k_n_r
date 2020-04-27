@@ -1,32 +1,6 @@
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-struct trie {
-  char c;
-  int occurrences;
-  struct trie *lo_kid, *hi_kid, *eq_kid;
-};
-
-struct trie *insert(struct trie *t, char *word);
-struct trie *insert_inner(struct trie *t, char *word, int len);
-int lookup(struct trie *t, char *word);
-int lookup_inner(struct trie *t, char *word, int len);
-void test(struct trie *t, char *word);
-
-int main() {
-  struct trie *t = NULL;
-  t = insert(t, "cyka");
-  t = insert(t, "cyka");
-  test(t, "cyka");
-  test(t, "kurwa");
-  return 0;
-}
-
-void test(struct trie *t, char *word) {
-  int res = lookup(t, word);
-  printf("%s occurs %d times\n", word, res);
-}
+#include "trie.h"
 
 struct trie *insert(struct trie *t, char *word) {
   int len = strlen(word);
