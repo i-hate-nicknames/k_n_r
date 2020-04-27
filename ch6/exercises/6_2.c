@@ -31,7 +31,7 @@ void print_trie(struct trie *t, int current_depth, char *word) {
   if (t == NULL || current_depth >= MAX_LEN) {
     return;
   }
-  print_trie(t->lo_kid, current_depth, word);
+  print_trie(t->hi_kid, current_depth, word);
   word[current_depth] = t->c;
   if (current_depth == PREFIX_LEN-1) {
     word[current_depth+1] = '\0';
@@ -50,7 +50,7 @@ void print_trie(struct trie *t, int current_depth, char *word) {
   if (current_depth == PREFIX_LEN-1) {
     printf("----------------\n");
   }
-  print_trie(t->hi_kid, current_depth, word);
+  print_trie(t->lo_kid, current_depth, word);
   
 }
 
