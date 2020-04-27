@@ -23,46 +23,37 @@ void delete_trie(struct trie *t) {
 }
 
 struct trie *insert(struct trie *t, char *word) {
-  int len = strlen(word);
-  return insert_inner(t, word, len);
-}
-
-struct trie *insert_inner(struct trie *t, char *word, int len) {
   char current = word[0];
   if (t == NULL) {
     t = make_trie(current);
   }
-  if (len == 1) {
+  if (word[1] == '\0') {
     t->occurrences++;
     return t;
   }
   if (t->c < current) {
-    t->lo_kid = insert_inner(t->lo_kid, word, len);
+    t->lo_kid = insert(t->lo_kid, word);
   } else if (t->c > current) {
-    t->hi_kid = insert_inner(t->hi_kid, word, len);
+    t->hi_kid = insert(t->hi_kid, word);
   } else {
-    t->eq_kid = insert_inner(t->eq_kid, word+1, len-1);
+    t->eq_kid = insert(t->eq_kid, word+1);
   }
   return t;
 }
 
 int lookup(struct trie *t, char *word) {
-  return lookup_inner(t, word, strlen(word));
-}
-
-int lookup_inner(struct trie *t, char *word, int len) {
   if (t == NULL) {
     return 0;
   }
   char current = word[0];
   if (t->c < current) {
-    return lookup_inner(t->lo_kid, word, len);
+    return lookup(t->lo_kid, word);
   } else if (t->c > current) {
-    return lookup_inner(t->hi_kid, word, len);
+    return lookup(t->hi_kid, word);
   } else {
-    if (len == 1) {
+    if (word[1] == '\0') {
       return t->occurrences;
     }
-    return lookup_inner(t->eq_kid, word+1, len-1);
+    return lookup(t->eq_kid, word+1);
   }
 }
