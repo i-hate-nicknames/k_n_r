@@ -8,7 +8,7 @@
 #include <ctype.h>
 #include "trie.h"
 
-#define PREFIX_LEN 6
+#define PREFIX_LEN 3
 #define MAX_LEN 100
 
 int getword(char *buf, int max_len);
@@ -18,6 +18,9 @@ int main() {
   struct trie *t;
   char word_buf[MAX_LEN];
   while (getword(word_buf, MAX_LEN) != EOF) {
+    if (strlen(word_buf) < 3) {
+      continue;
+    }
     t = insert(t, word_buf);
   }
   print_trie(t, 0, word_buf);
@@ -30,12 +33,23 @@ void print_trie(struct trie *t, int current_depth, char *word) {
   }
   print_trie(t->lo_kid, current_depth, word);
   word[current_depth] = t->c;
-  if (t->occurrences > 0) {
+  if (current_depth == PREFIX_LEN-1) {
+    word[current_depth+1] = '\0';
+    printf("Prefix %s\n", word);
+    printf("----------------\n");
+  }
+  if (current_depth >= PREFIX_LEN-1 && t->occurrences > 0) {
     word[current_depth+1] = '\0';
     printf("word: %s, occurrences: %d\n", word, t->occurrences);
+    
   }
-
   print_trie(t->eq_kid, current_depth+1, word);
+  // all of the things in the eq_kid are in our prefix, and
+  // the length is guaranteed to be increasing, so we will only
+  // print one line of ----, right after the group is over
+  if (current_depth == PREFIX_LEN-1) {
+    printf("----------------\n");
+  }
   print_trie(t->hi_kid, current_depth, word);
   
 }
