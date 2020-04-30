@@ -25,7 +25,7 @@ int main() {
   char *val = "some val";
   add(key, val);
   char *found = lookup(key);
-  if (found != NULL && (0 == strcmp(found, val))) {
+  if (found != NULL && (strcmp(found, val) == 0)) {
     printf("found entry: key = %s, value = %s\n", key, val);
   }
   undef(key);
@@ -55,7 +55,7 @@ struct nlist *lookup_entry(char *key) {
   unsigned hashval = hash(key);
   struct nlist *item;
   for (item = table[hashval]; item != NULL; item = item->next) {
-    if (0 == strcmp(key, item->key)) {
+    if (strcmp(key, item->key) == 0) {
       return item;
     }
   }
@@ -94,7 +94,7 @@ struct nlist *delete_el(struct nlist *lst, char *key) {
   if (lst == NULL) {
     return NULL;
   }
-  if (0 == strcmp(lst->key, key)) {
+  if (strcmp(lst->key, key) == 0) {
     free(lst->key);
     free(lst->value);
     free(lst);
