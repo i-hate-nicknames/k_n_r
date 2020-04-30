@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "hashtbl.h"
 
 #define TABLE_SIZE 101
@@ -15,6 +16,23 @@ static struct nlist *table[TABLE_SIZE];
 
 unsigned hash(char *s);
 struct nlist *lookup_entry(char *key);
+// delete element that has given key, return list without the
+// element
+struct nlist *delete_el(struct nlist *lst, char *key);
+
+int main() {
+  char *key = "test_key";
+  char *val = "some val";
+  add(key, val);
+  char *found = lookup(key);
+  if (found != NULL && (0 == strcmp(found, val))) {
+    printf("found entry: key = %s, value = %s\n", key, val);
+  }
+  undef(key);
+  if (lookup(key) == NULL) {
+    printf("key %s not found\n", key);
+  }
+}
 
 unsigned hash(char *s) {
   unsigned val;
@@ -65,4 +83,24 @@ int add(char *key, char *value) {
     return 0;
   }
   return 1;
+}
+
+void undef(char *key) {
+  unsigned hashval = hash(key);
+  table[hashval] = delete_el(table[hashval], key);
+}
+
+struct nlist *delete_el(struct nlist *lst, char *key) {
+  if (lst == NULL) {
+    return NULL;
+  }
+  if (0 == strcmp(lst->key, key)) {
+    free(lst->key);
+    free(lst->value);
+    free(lst);
+    return lst->next;
+  }
+  else {
+    lst->next = delete_el(lst->next, key);
+  }
 }

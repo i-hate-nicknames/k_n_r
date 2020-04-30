@@ -12,4 +12,7 @@ char *lookup(char *key);
 // failed and non-zero if it succeeded
 int add(char *key, char *value);
 
+// exercise 6_5
+void undef(char *key);
+
 #endif
