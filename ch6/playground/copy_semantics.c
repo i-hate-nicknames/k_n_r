@@ -5,11 +5,6 @@ struct point {
   int y;
 };
 
-struct sraka {
-  int x;
-  struct sraka *s;
-};
-
 struct point make_point(int x, int y);
 void update(struct point p);
 void update2(struct point *p);
