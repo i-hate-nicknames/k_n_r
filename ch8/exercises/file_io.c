@@ -1,6 +1,8 @@
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
+#define EOF (-1)
 #define BUF_SIZE 1024
 #define OPEN_MAX 20
 #define PERMS 0666
@@ -38,10 +40,10 @@ int _flushbuf(int, FILE *);
 #define ferror(p) (((p)->flag & _ERR) != 0)
 #define fileno(p) ((p)->fd)
 
-#define getc(p) (--(p)->cnt >= 0                                \
+#define getc(p) (--(p)->chars_left >= 0                         \
                  ? (unsigned char) *(p)->ptr++ : _fillbuf(p))
 
-#define putc(x, p) (--(p)->cnt >=0                              \
+#define putc(x, p) (--(p)->chars_left >=0                       \
                     ? *(p)->ptr++ = (x) : _flushbuf((x), (p)))
 
 #define getchar() getc(stdin)
@@ -89,10 +91,40 @@ FILE *fopen(char *name, char *mode) {
   return fp;
 }
 
-int main() {
-  fopen("test.test", "a");
-  return 0;
+/** allocate and fill the input buffer */
+int _fillbuf(FILE *fp) {
+  int bufsize;
+  int result;
+  if ((fp->flag & (_READ | _EOF | _ERR)) != _READ) {
+    return EOF;
+  }
+  bufsize = (fp->flag & _UNBUF) ? 1 : BUF_SIZE;
+  if (fp->base == NULL) {
+    fp->base = (char *) malloc(bufsize);
+    if (fp->base == NULL) {
+      return EOF;
+    }
+  }
+  fp->ptr = fp->base;
+  fp->chars_left = read(fp->fd, fp->ptr, bufsize);
+  if (fp->chars_left <= 0) {
+    if (fp->chars_left == 0) {
+      fp->flag |= _EOF;
+    } else {
+      fp->flag |= _ERR;
+    }
+    fp->chars_left = 0;
+    return EOF;
+  }
+  // take first character and advance buffer
+  result = *fp->ptr;
+  fp->ptr++;
+  fp->chars_left--;
+  return result;
 }
 
-
-
+int main() {
+  FILE *fp = fopen("test.test", "r");
+  int val = _fillbuf(fp);
+  return val;
+}
