@@ -25,8 +25,8 @@ enum _flags {
 
 FILE _iob[OPEN_MAX] = {
                        {0, (char *) 0, (char *) 0, _READ, 0},
-                       {0, (char *) 0, (char *) 0, _READ, 0},
-                       {0, (char *) 0, (char *) 0, _READ, 0}
+                       {1, (char *) 0, (char *) 0, _WRITE, 0},
+                       {2, (char *) 0, (char *) 0, _WRITE | _UNBUF, 0}
 };
 
 int _fillbuf(FILE *);
