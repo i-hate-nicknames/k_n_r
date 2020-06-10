@@ -79,7 +79,7 @@ FILE *fopen(char *name, char *mode) {
     if ((fd = open(name, O_WRONLY, 0)) == -1) {
       fd = creat(name, PERMS);
     }
-    lseek(fd, 0L, SEEK_SET);
+    lseek(fd, 0L, SEEK_END);
   }
   else {
     fd = open(name, O_RDONLY, 0);
@@ -182,17 +182,31 @@ int fflush(FILE *fp) {
   return 0;
 }
 
+int fclose(FILE *fp) {
+  int flush_result = fflush(fp);
+  int close_result = close(fp->fd);
+  free(fp->base);
+  fp->base = NULL;
+  fp->ptr = NULL;
+  fp->chars_left = 0;
+  fp->flag = 0;
+  if (flush_result || close_result) {
+    return EOF;
+  }
+  return 0;
+}
+
 int get_bufsize(FILE *fp) {
   return (fp->flag & _UNBUF) ? 1 : BUF_SIZE;
 }
 
 int main() {
-  /* FILE *fp = fopen("test.test", "r"); */
+  FILE *fp = fopen("test.test", "a");
   /* int val = _fillbuf(fp); */
   for (int i = 0; i < 9; i++) {
-    putc('8', stdout);
+    putc('8', fp);
     /* fflush(stdout); */
   }
-  fflush(stdout);
+  fclose(fp);
   return 0;
 }
