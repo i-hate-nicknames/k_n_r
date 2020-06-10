@@ -32,9 +32,9 @@ FILE _iob[OPEN_MAX] = {
 int _fillbuf(FILE *);
 int _flushbuf(int, FILE *);
 
-#define stdin (&_iob[0]);
-#define stdout (&_iob[1]);
-#define stderr (&_iob[2]);
+#define stdin (&_iob[0])
+#define stdout (&_iob[1])
+#define stderr (&_iob[2])
 
 #define feof(p) (((p)->flag & _EOF) != 0)
 #define ferror(p) (((p)->flag & _ERR) != 0)
@@ -123,8 +123,48 @@ int _fillbuf(FILE *fp) {
   return result;
 }
 
+int _flushbuf(int ch, FILE *fp) {
+  int bufsize;
+  int result;
+  if ((fp->flag & (_WRITE | _EOF | _ERR)) != _WRITE) {
+    return EOF;
+  }
+  bufsize = (fp->flag & _UNBUF) ? 1 : BUF_SIZE;
+  // initializing fresh fp, create a new buffer
+  if (fp->base == NULL) {
+    fp->base = (char *) malloc(bufsize);
+    if (fp->base == NULL) {
+      return EOF;
+    }
+    fp->ptr = fp->base;
+    fp->chars_left = bufsize - 1;
+  }
+
+  *fp->ptr++ = (unsigned char) ch;
+  // in case we just initialized the buffer and it's not actually
+  // overflown
+  if (fp->chars_left > 0) {
+    return ch;
+  }
+
+  // chars_left is 0, we must flush the buffer contents to the file
+  int written = write(fp->fd, fp->base, bufsize);
+  fp->ptr = fp->base;
+  fp->chars_left;
+  if (written != bufsize) {
+    if (written == -1) {
+      fp->flag |= _ERR;
+    } else {
+      fp->flag |= _EOF;
+    }
+    return EOF;
+  }
+  return ch;
+}
+
 int main() {
-  FILE *fp = fopen("test.test", "r");
-  int val = _fillbuf(fp);
-  return val;
+  /* FILE *fp = fopen("test.test", "r"); */
+  /* int val = _fillbuf(fp); */
+  putc('8', stderr);
+  return 0;
 }
