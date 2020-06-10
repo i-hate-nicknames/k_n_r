@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define EOF (-1)
-#define BUF_SIZE 1024
+#define BUF_SIZE 3
 #define OPEN_MAX 20
 #define PERMS 0666
 
@@ -31,6 +31,8 @@ FILE _iob[OPEN_MAX] = {
 
 int _fillbuf(FILE *);
 int _flushbuf(int, FILE *);
+int fflush(FILE *);
+int fclose(FILE *);
 
 #define stdin (&_iob[0])
 #define stdout (&_iob[1])
@@ -141,30 +143,50 @@ int _flushbuf(int ch, FILE *fp) {
   }
 
   *fp->ptr++ = (unsigned char) ch;
-  // in case we just initialized the buffer and it's not actually
-  // overflown
-  if (fp->chars_left > 0) {
-    return ch;
-  }
-
-  // chars_left is 0, we must flush the buffer contents to the file
-  int written = write(fp->fd, fp->base, bufsize);
-  fp->ptr = fp->base;
-  fp->chars_left;
-  if (written != bufsize) {
-    if (written == -1) {
-      fp->flag |= _ERR;
-    } else {
-      fp->flag |= _EOF;
+  // flush the buffer when it's full
+  if (fp->chars_left == 0) {
+    if (fflush(fp) != 0) {
+      return EOF;
     }
-    return EOF;
   }
   return ch;
+}
+
+int fflush(FILE *fp) {
+  if (fp->flag & _UNBUF) {
+    return 0;
+  }
+  if (fp->flag & (_EOF | _ERR)) {
+    return EOF;
+  }
+  // reposition buffer variables "throwing away"
+  // buffer data upon next writes to the buffer
+  fp->ptr = fp->base;
+  fp->chars_left = 0;
+  // for write mode files, dump buffer to fd
+  if (fp->flag & _WRITE) {
+    int to_write = BUF_SIZE - fp->chars_left;
+    int written = write(fp->fd, fp->base, to_write);
+    fp->ptr = fp->base;
+    fp->chars_left = 0;
+    if (written != to_write) {
+      if (written == -1) {
+        fp->flag |= _ERR;
+      } else {
+        fp->flag |= _EOF;
+      }
+      return EOF;
+    }
+  }
+  return 0;
 }
 
 int main() {
   /* FILE *fp = fopen("test.test", "r"); */
   /* int val = _fillbuf(fp); */
-  putc('8', stderr);
+  for (int i = 0; i < 5; i++) {
+    putc('8', stdout);
+  }
+  //fflush(stdout);
   return 0;
 }
