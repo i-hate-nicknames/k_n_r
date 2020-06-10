@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define EOF (-1)
-#define BUF_SIZE 3
+#define BUF_SIZE 1024
 #define OPEN_MAX 20
 #define PERMS 0666
 
@@ -33,6 +33,7 @@ int _fillbuf(FILE *);
 int _flushbuf(int, FILE *);
 int fflush(FILE *);
 int fclose(FILE *);
+int get_bufsize(FILE *);
 
 #define stdin (&_iob[0])
 #define stdout (&_iob[1])
@@ -45,7 +46,7 @@ int fclose(FILE *);
 #define getc(p) (--(p)->chars_left >= 0                         \
                  ? (unsigned char) *(p)->ptr++ : _fillbuf(p))
 
-#define putc(x, p) (--(p)->chars_left >=0                       \
+#define putc(x, p) (--(p)->chars_left >= 0                       \
                     ? *(p)->ptr++ = (x) : _flushbuf((x), (p)))
 
 #define getchar() getc(stdin)
@@ -131,7 +132,7 @@ int _flushbuf(int ch, FILE *fp) {
   if ((fp->flag & (_WRITE | _EOF | _ERR)) != _WRITE) {
     return EOF;
   }
-  bufsize = (fp->flag & _UNBUF) ? 1 : BUF_SIZE;
+  bufsize = get_bufsize(fp);
   // initializing fresh fp, create a new buffer
   if (fp->base == NULL) {
     fp->base = (char *) malloc(bufsize);
@@ -144,7 +145,7 @@ int _flushbuf(int ch, FILE *fp) {
 
   *fp->ptr++ = (unsigned char) ch;
   // flush the buffer when it's full
-  if (fp->chars_left == 0) {
+  if (fp->chars_left <= 0) {
     if (fflush(fp) != 0) {
       return EOF;
     }
@@ -159,16 +160,16 @@ int fflush(FILE *fp) {
   if (fp->flag & (_EOF | _ERR)) {
     return EOF;
   }
-  // reposition buffer variables "throwing away"
-  // buffer data upon next writes to the buffer
-  fp->ptr = fp->base;
-  fp->chars_left = 0;
+  if (fp->flag & _READ) {
+    fp->ptr = fp->base;
+    fp->chars_left = get_bufsize(fp);
+  }
   // for write mode files, dump buffer to fd
   if (fp->flag & _WRITE) {
     int to_write = BUF_SIZE - fp->chars_left;
     int written = write(fp->fd, fp->base, to_write);
     fp->ptr = fp->base;
-    fp->chars_left = 0;
+    fp->chars_left = get_bufsize(fp);
     if (written != to_write) {
       if (written == -1) {
         fp->flag |= _ERR;
@@ -181,12 +182,17 @@ int fflush(FILE *fp) {
   return 0;
 }
 
+int get_bufsize(FILE *fp) {
+  return (fp->flag & _UNBUF) ? 1 : BUF_SIZE;
+}
+
 int main() {
   /* FILE *fp = fopen("test.test", "r"); */
   /* int val = _fillbuf(fp); */
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 9; i++) {
     putc('8', stdout);
+    /* fflush(stdout); */
   }
-  //fflush(stdout);
+  fflush(stdout);
   return 0;
 }
