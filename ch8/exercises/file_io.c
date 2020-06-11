@@ -61,7 +61,9 @@ FILE *fopen(char *name, char *mode) {
     return NULL;
   }
 
-  for (int i = 0; i < OPEN_MAX; i++) {
+  // elements 0, 1 and 2 are occupied by standard streams
+  for (int i = 3; i < OPEN_MAX; i++) {
+    fp = &(_iob[i]);
     if ((fp->flag & (_READ | _WRITE)) == 0) {
       free_idx = i;
       break;
@@ -71,7 +73,6 @@ FILE *fopen(char *name, char *mode) {
   if (free_idx == -1) {
     return NULL;
   }
-  fp = &(_iob[free_idx]);
 
   if (*mode == 'w') {
     fd = creat(name, PERMS);
