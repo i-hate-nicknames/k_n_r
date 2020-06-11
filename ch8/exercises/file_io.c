@@ -240,19 +240,22 @@ int get_bufsize(FILE *fp) {
 int main() {
 
   FILE *fp = fopen("test.test", "r");
-
-  for (int i = 0; i < 20; i++) {
+  FILE *wr = fopen("write.test", "a");
+  fseek(wr, 0, SEEK_SET);
+  for (int i = 0; i < 5; i++) {
       int c = getc(fp);
-      putc(c, stdout);
-      if (i % 2 == 0) {
-      int res = 0;
-      res = fflush(fp);
-      if (res == EOF) {
-        return 2;
+      if (c == EOF) {
+        break;
       }
+      putc(c, wr);
+      if (i % 2 == 1) {
+        if (fseek(wr, 0, SEEK_CUR) == EOF) {
+          break;
+        }
       }
   }
   fclose(fp);
+  fclose(wr);
   fflush(stdout);
   return 0;
 }
