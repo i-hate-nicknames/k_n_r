@@ -156,13 +156,18 @@ int _flushbuf(int ch, FILE *fp) {
 }
 
 int fflush(FILE *fp) {
-  if (fp->flag & _UNBUF || fp->base == NULL) {
+  if (fp->base == NULL) {
+    // according to spec we must fflush all opened files at this point
     return 0;
   }
   if (fp->flag & (_EOF | _ERR)) {
     return EOF;
   }
   if (fp->flag & _READ) {
+    if (fp->flag & _UNBUF) {
+      // do nothing for unbuffered reads
+      return 0;
+    }
     // for reads, we read a chunk into the buffer, so the position
     // in fd is actually bigger than the "actual" position in the file.
     // when we flush, we want them to get in sync
@@ -178,10 +183,11 @@ int fflush(FILE *fp) {
   }
   // for write mode files, dump buffer to fd
   if (fp->flag & _WRITE) {
-    int to_write = BUF_SIZE - fp->chars_left;
+    int bufsize = get_bufsize(fp);
+    int to_write = bufsize - fp->chars_left;
     int written = write(fp->fd, fp->base, to_write);
     fp->ptr = fp->base;
-    fp->chars_left = get_bufsize(fp);
+    fp->chars_left = bufsize;
     if (written != to_write) {
       if (written == -1) {
         fp->flag |= _ERR;
