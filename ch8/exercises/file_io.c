@@ -156,15 +156,25 @@ int _flushbuf(int ch, FILE *fp) {
 }
 
 int fflush(FILE *fp) {
-  if (fp->flag & _UNBUF) {
+  if (fp->flag & _UNBUF || fp->base == NULL) {
     return 0;
   }
   if (fp->flag & (_EOF | _ERR)) {
     return EOF;
   }
   if (fp->flag & _READ) {
+    // for reads, we read a chunk into the buffer, so the position
+    // in fd is actually bigger than the "actual" position in the file.
+    // when we flush, we want them to get in sync
+    if (fp->chars_left > 0) {
+      int seek_res = lseek(fp->fd, -(fp->chars_left), SEEK_CUR);
+      if (seek_res == -1) {
+        return EOF;
+      }
+    }
     fp->ptr = fp->base;
-    fp->chars_left = get_bufsize(fp);
+    fp->chars_left = 0;
+    return 0;
   }
   // for write mode files, dump buffer to fd
   if (fp->flag & _WRITE) {
@@ -198,39 +208,20 @@ int fclose(FILE *fp) {
   return 0;
 }
 
-int _fseek_read(FILE *fp, long offset) {
-
-}
-
-int _fseek_write(FILE *fp, long offset) {
-
-}
-
-long _calc_seek_offset(FILE *fp, long offset, int whence) {
-  int bufsize = get_bufsize(fp);
-  // for writes, we first write in the buffer, so the effective
-  // position in the file is position of fd plus the number of
-  // characters we wrote to the buffer
-  // Return requested offset plus the actual position
-  if (fp->flag & _WRITE) {
-    return offset + bufsize - fp->chars_left;
-  }
-  // for reads, we read a chunk into the buffer, so the position
-  // in fd is actually bigger than the "actual" position in the file.
-  // We need to substract the number of characters we haven't consumed
-  // yet from the buffer
-  if (fp->flag & _READ) {
-    return offset - fp->chars_left;
-  }
-}
-
 int fseek(FILE *fp, long offset, int whence) {
   int final_offset = offset;
   // the position is related to current position, so we need to count
   // in buffering
-  if (whence == SEEK_CUR) {
-    final_offset = _calc_seek_offset(fp, offset, whence);
+  if (fp->flag & _WRITE && whence == SEEK_CUR) {
+    // for writes, we first write in the buffer, so the effective
+    // position in the file is position of fd plus the number of
+    // characters we wrote to the buffer
+    final_offset = offset + get_bufsize(fp) - fp->chars_left;
   }
+  // For simplicity and conciseness, we just use fflush: it will adjust
+  // position of fd properly, at the cost of doing two lseek calls
+  // For best performance it would be better to handle read and write buffers
+  // differently
   fflush(fp);
   fp->flag &= ~_EOF; // clear EOF flag as per specification
   return lseek(fp->fd, final_offset, whence);
@@ -241,23 +232,21 @@ int get_bufsize(FILE *fp) {
 }
 
 int main() {
+
   FILE *fp = fopen("test.test", "r");
+
   for (int i = 0; i < 20; i++) {
-    /* fseek(fp, 1, SEEK_SET); */
-    fflush(fp); // todo: fix fflush bug before proceeding with fseek
-    int c = getc(fp);
-    putc(c, stdout);
+      int c = getc(fp);
+      putc(c, stdout);
+      if (i % 2 == 0) {
+      int res = 0;
+      res = fflush(fp);
+      if (res == EOF) {
+        return 2;
+      }
+      }
   }
+  fclose(fp);
   fflush(stdout);
-  fclose(fp);
   return 0;
-  
-  fp = fopen("test.test", "w");
-  /* int val = _fillbuf(fp); */
-  for (int i = 0; i < 10; i++) {
-    for (char c = '0'; c <= '9'; c++) {
-      putc(c, fp);
-    }
-  }
-  fclose(fp);
 }
