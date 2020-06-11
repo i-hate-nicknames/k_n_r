@@ -33,6 +33,7 @@ int _fillbuf(FILE *);
 int _flushbuf(int, FILE *);
 int fflush(FILE *);
 int fclose(FILE *);
+int fseek(FILE *, long, int);
 int get_bufsize(FILE *);
 
 #define stdin (&_iob[0])
@@ -196,17 +197,66 @@ int fclose(FILE *fp) {
   return 0;
 }
 
+int _fseek_read(FILE *fp, long offset) {
+
+}
+
+int _fseek_write(FILE *fp, long offset) {
+
+}
+
+long _calc_seek_offset(FILE *fp, long offset, int whence) {
+  int bufsize = get_bufsize(fp);
+  // for writes, we first write in the buffer, so the effective
+  // position in the file is position of fd plus the number of
+  // characters we wrote to the buffer
+  // Return requested offset plus the actual position
+  if (fp->flag & _WRITE) {
+    return offset + bufsize - fp->chars_left;
+  }
+  // for reads, we read a chunk into the buffer, so the position
+  // in fd is actually bigger than the "actual" position in the file.
+  // We need to substract the number of characters we haven't consumed
+  // yet from the buffer
+  if (fp->flag & _READ) {
+    return offset - fp->chars_left;
+  }
+}
+
+int fseek(FILE *fp, long offset, int whence) {
+  int final_offset = offset;
+  // the position is related to current position, so we need to count
+  // in buffering
+  if (whence == SEEK_CUR) {
+    final_offset = _calc_seek_offset(fp, offset, whence);
+  }
+  fflush(fp);
+  fp->flag &= ~_EOF; // clear EOF flag as per specification
+  return lseek(fp->fd, final_offset, whence);
+}
+
 int get_bufsize(FILE *fp) {
   return (fp->flag & _UNBUF) ? 1 : BUF_SIZE;
 }
 
 int main() {
-  FILE *fp = fopen("test.test", "a");
-  /* int val = _fillbuf(fp); */
-  for (int i = 0; i < 9; i++) {
-    putc('8', fp);
-    /* fflush(stdout); */
+  FILE *fp = fopen("test.test", "r");
+  for (int i = 0; i < 20; i++) {
+    /* fseek(fp, 1, SEEK_SET); */
+    fflush(fp); // todo: fix fflush bug before proceeding with fseek
+    int c = getc(fp);
+    putc(c, stdout);
   }
+  fflush(stdout);
   fclose(fp);
   return 0;
+  
+  fp = fopen("test.test", "w");
+  /* int val = _fillbuf(fp); */
+  for (int i = 0; i < 10; i++) {
+    for (char c = '0'; c <= '9'; c++) {
+      putc(c, fp);
+    }
+  }
+  fclose(fp);
 }
