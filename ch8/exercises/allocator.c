@@ -13,14 +13,14 @@ typedef union _hdr {
 #define get_size(hptr) ((hptr)->s.size)
 #define set_size(hptr, to_set) ((hptr)->s.size = (to_set))
 
-void *malloc(unsigned nbytes);
-Header *morecore(unsigned nunits);
-void free(void *ptr);
+void *my_malloc(unsigned nbytes);
+static Header *morecore(unsigned nunits);
+void my_free(void *ptr);
 
 static Header empty;
 static Header *freeptr = NULL;
 
-void *malloc(unsigned nbytes) {
+void *my_malloc(unsigned nbytes) {
   Header *prev;
   unsigned nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
   // initialize empty list and point freeptr to it
@@ -53,7 +53,36 @@ void *malloc(unsigned nbytes) {
   }
 }
 
+#define NALLOC 1024 // min number of units allocated
+
+static Header *morecore(unsigned nunits) {
+  char *heap_ptr;
+  Header *new_block;
+  heap_ptr = sbrk(nunits * sizeof(Header));
+  if (heap_ptr == NULL) {
+    return NULL;
+  }
+  new_block = (Header *) heap_ptr;
+  set_size(new_block, nunits);
+  my_free((void *)(heap_ptr + 1));
+  return new_block;
+}
+
+void my_free(void *ptr) {
+  Header *to_free, *p;
+  // ptr points to the space after the header, set to_free
+  // to point to the header itself
+  to_free = (Header *) ptr;
+  to_free = to_free -1;
+  for (p = freeptr; to_free <= p || to_free >= get_next(p); p = get_next(p)) {
+    if (p >= get_next(p) && (to_free > p || to_free < get_next(p))) {
+      break;
+    }
+  }
+
+  freeptr = p;
+}
+
 int main() {
-  printf("long %d, long long %d\n", sizeof(long), sizeof(long long));
   return 0;
 }
