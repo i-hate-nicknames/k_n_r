@@ -32,7 +32,7 @@ void fsize(char *name) {
   if ((stbuf.st_mode & S_IFMT) == S_IFDIR) {
     dirwalk(name, fsize);
   }
-  printf("%8ld %s\n", stbuf.st_size, name);
+  printf("Size:\t%8ld, blocks:\t%5ld %s\n", stbuf.st_size, stbuf.st_blocks, name);
 }
 
 void dirwalk(char *dir, void (*fcn)(char *)) {
@@ -49,7 +49,7 @@ void dirwalk(char *dir, void (*fcn)(char *)) {
         || strcmp(dp->d_name, "..") == 0) {
       continue;
     }
-    if (strlen(dir) + strlen(dp->d_name) + 2 > sizeof(name)) {
+    if (strlen(dir) + _D_ALLOC_NAMLEN(dp) + 1 > sizeof(name)) {
       fprintf(stderr, "dirwalk: name %s %s too long\n", name, dp->d_name);
     } else {
       sprintf(name, "%s/%s", dir, dp->d_name);
