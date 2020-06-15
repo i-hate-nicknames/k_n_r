@@ -66,6 +66,7 @@ void *my_malloc(unsigned nbytes) {
       if (p == NULL) {
         return NULL;
       }
+      p = freeptr;
     }
   }
 }
@@ -155,9 +156,11 @@ void *my_calloc(unsigned n, unsigned size) {
 }
 
 int main() {
-  void *p = my_malloc(1023 * sizeof(Header));
-  void *p2 = my_malloc(1023 * sizeof(Header));
-  my_free(p);
-  int *p3 = my_malloc(1023 * sizeof(Header));
+  //void *p = my_malloc(1023 * sizeof(Header));
+  //void *p2 = my_malloc(1023 * sizeof(Header));
+  //my_free(p);
+  int *p3 = my_calloc(2048, sizeof(int));
+  /* int *p4 = my_calloc(200, sizeof(int)); */
+  /* int *p5 = my_calloc(200, sizeof(int)); */
   return 0;
 }
