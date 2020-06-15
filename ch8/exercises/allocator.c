@@ -26,9 +26,18 @@ static Header empty;
 // this is entry point to the free list
 static Header *freeptr = NULL;
 
+// at most 500 MB is allowed per single malloc
+#define MALLOC_MAX_BLOCKS 65536000
+
 void *my_malloc(unsigned nbytes) {
   Header *prev;
   unsigned nunits = (nbytes+sizeof(Header)-1)/sizeof(Header) + 1;
+
+  if (nunits > MALLOC_MAX_BLOCKS) {
+    fprintf(stderr, "Cannot allocate %d bytes, at most %d is allowed\n",
+            nunits * sizeof(Header), MALLOC_MAX_BLOCKS * sizeof(Header));
+    return NULL;
+  }
   // initialize empty list and point freeptr to it
   if (freeptr == NULL) {
     empty.s.next = &empty;
@@ -107,6 +116,11 @@ void my_free(void *ptr) {
   to_free = (Header *) ptr;
   to_free = to_free - 1;
 
+  if (get_size(to_free) <= 0 || get_size(to_free) > MALLOC_MAX_BLOCKS) {
+    fprintf(stderr, "Invalid free size: %d\n");
+    return;
+  }
+
   // To preserve te invariant of the free list we need to find the right place in the list for
   // the new block.
   // If the new block is physically located between two other blocks, we need to insert it
@@ -168,5 +182,6 @@ int main() {
   int *p4 = my_calloc(2000, sizeof(int));
   int *p5 = my_calloc(2000, sizeof(int));
   my_free(p4);
+
   return 0;
 }
