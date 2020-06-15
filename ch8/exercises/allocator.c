@@ -35,6 +35,7 @@ void *my_malloc(unsigned nbytes) {
     empty.s.size = 0;
     freeptr = &empty;
   }
+  //  printf("want to allocated %d blocks\n", nunits);
   prev = freeptr;
   for (Header *p = get_next(prev); ; prev = p, p = get_next(p)) {
     if (get_size(p) >= nunits) {
@@ -44,18 +45,21 @@ void *my_malloc(unsigned nbytes) {
         // preventing any further allocation here
         set_next(prev, get_next(p));
       } else {
+        //    printf("Found a block: %p, size: %d\n", p, get_size(p));
+        
         // allocate tail end, effectively create a new block of requested
         // size within current free block. Update size accordingly
-
+        int size_rem = get_size(p) - nunits;
         // update size of the current block to be what remains after we
         // allocate a new block in tail
-        set_size(p, get_size(p) - nunits);
+        set_size(p, size_rem);
         // advance pointer to point to the newly created block of requested
         // size
-        p = p + (get_size(p) - nunits);
+        p += size_rem;
         // set size of this block
         set_size(p, nunits);
       }
+      //      printf("allocated a block of %d units\n", nunits);
       freeptr = prev;
       return (void *)(p+1);
     }
@@ -129,6 +133,7 @@ void my_free(void *ptr) {
     // size is less, just link to_free to the next block
     set_next(to_free, get_next(p));
   }
+  
   if (p + get_size(p) == to_free) {
     // adding will result in two consecutive blocks, p and to_free
     // merge them together eliminating to_free and adding its size to p
@@ -159,8 +164,9 @@ int main() {
   //void *p = my_malloc(1023 * sizeof(Header));
   //void *p2 = my_malloc(1023 * sizeof(Header));
   //my_free(p);
-  int *p3 = my_calloc(2048, sizeof(int));
-  /* int *p4 = my_calloc(200, sizeof(int)); */
-  /* int *p5 = my_calloc(200, sizeof(int)); */
+  int *p3 = (int *) my_malloc(2045 * 4);
+  int *p4 = my_calloc(2000, sizeof(int));
+  int *p5 = my_calloc(2000, sizeof(int));
+  my_free(p4);
   return 0;
 }
