@@ -17,6 +17,7 @@ typedef union _hdr {
 #define in_range(x, a, b) ((x) >= (a) && (x) <= (b))
 
 void *my_malloc(unsigned nbytes);
+void *my_calloc(unsigned n, unsigned size);
 static Header *morecore(unsigned nunits);
 void my_free(void *ptr);
 
@@ -140,6 +141,17 @@ void my_free(void *ptr) {
   // point freeptr to the block previous to the newly created, to help
   // finding it sooner
   freeptr = p;
+}
+
+// exercise 8_6
+void *my_calloc(unsigned n, unsigned size) {
+  Header *allocated = my_malloc(n * size);
+  // end points to the next address after the allocated space
+  char *end = (char *) allocated + get_size(allocated-1);
+  for (char *c = (char *) allocated; c < end; c++) {
+    *c = 0;
+  }
+  return allocated;
 }
 
 int main() {
