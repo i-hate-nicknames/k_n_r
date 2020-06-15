@@ -20,6 +20,7 @@ void *my_malloc(unsigned nbytes);
 void *my_calloc(unsigned n, unsigned size);
 static Header *morecore(unsigned nunits);
 void my_free(void *ptr);
+void bfree(void *ptr, int n);
 
 static Header empty;
 
@@ -99,7 +100,7 @@ static Header *morecore(unsigned nunits) {
     return NULL;
   }
   new_block = (Header *) heap_ptr;
-  set_size(new_block,  size);
+  set_size(new_block, size);
   // "free" the block, effectively adding it to the freelist
   my_free((void *)(new_block + 1));
   return new_block;
@@ -174,14 +175,49 @@ void *my_calloc(unsigned n, unsigned size) {
   return allocated;
 }
 
-int main() {
-  //void *p = my_malloc(1023 * sizeof(Header));
-  //void *p2 = my_malloc(1023 * sizeof(Header));
-  //my_free(p);
-  int *p3 = (int *) my_malloc(2045 * 4);
-  int *p4 = my_calloc(2000, sizeof(int));
-  int *p5 = my_calloc(2000, sizeof(int));
-  my_free(p4);
+// exercise 8_8
+// add given area to the free list, allowing using static or external
+// array as allocatable by malloc memory
+// The actual size available for malloc will be less
+void bfree(void *ptr, int n) {
+  unsigned size = n / sizeof(Header);
+  if (size < 2) {
+    fprintf(stderr, "Cannot bfree given area: size is too small: given %d, need at least %d\n", n, sizeof(Header) * 2);
+    return;
+  }
+  if (freeptr == NULL) {
+    empty.s.next = &empty;
+    empty.s.size = 0;
+    freeptr = &empty;
+  }
+  Header *new_block = (Header *) ptr;
+  set_size(new_block, size);
+  my_free((void *)(new_block + 1));
+}
 
+static char buf[1024];
+
+int main() {
+  bfree(buf, 1024);
+  char *p = (char *) my_malloc(1024 - sizeof(Header));
+  char *p2 = p;
+  *p = 1;
+  p++;
+  *p = 2;
+  printf("Value: %d %d\n", *p, *(p-1));
+  p++;
+  *p = 15;
+  printf("Buffer:\n");
+  for (int i = 0; i < 24; i++) {
+    printf("%0xd: %d\n", i, buf[i]);
+  }
+  printf("Size: %d, next: %p\n", get_size((Header *)buf), get_next((Header *)buf));
+  int sum = 0;
+  for (int i  = 0; i < 1024 - 16; i++) {
+    sum += *p2;
+    p2++;
+  }
+  printf("sum: %d\n", sum);
+  printf("header size: %d\n", sizeof(Header));
   return 0;
 }
